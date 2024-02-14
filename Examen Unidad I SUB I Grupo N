@@ -1,0 +1,129 @@
+import tkinter as tk
+import ply.lex as lex
+
+# Definir tokens
+tokens = [
+    'RESERVADO',
+    'IDENTIFICADOR',
+    'DELIMITADOR',
+    'OPERADOR',
+    'NUMERO',
+    'CORCHETES',
+]
+
+# Token expresiones regulares 
+t_RESERVADO = r'(programa|int|read|printf|end)'
+t_IDENTIFICADOR = r'[a-zA-Z_][a-zA-Z0-9_]*'
+t_DELIMITADOR = r'[().;,""]'
+t_OPERADOR = r'[=+-]'
+t_NUMERO = r'\d+(\\d+)?'
+t_CORCHETES = r'({|})'
+
+
+t_ignore = ' \t'
+
+def t_newline(t):
+    r'\n+'
+    t.lexer.lineno += len(t.value)
+
+def t_error(t):
+    print(f"Illegal character '{t.value[0]}' at line {t.lineno}")
+    t.lexer.skip(1)
+
+lexer = lex.lex()
+
+def analizar(entrada):
+    lexer.input(entrada)
+    identificadores = []
+
+    while True:
+        token = lexer.token()
+        if not token:
+            break
+
+        if token.type == 'RESERVADO':
+            identificadores.append(f"RESERVADO    {token.value}")
+        elif token.type == 'IDENTIFICADOR':
+            identificadores.append(f"IDENTIFICADOR    {token.value}")
+        elif token.type == 'DELIMITADOR':
+            identificadores.append(f"DELIMITADOR    {token.value}")
+        elif token.type == 'OPERADOR':
+            identificadores.append(f"OPERADOR    {token.value}")
+        elif token.type == 'NUMERO':
+            identificadores.append(f"NUMERO    {token.value}")
+        elif token.type == 'CORCHETES':
+            identificadores.append(f"CORCHETES   {token.value}")
+
+    return identificadores
+
+def analizar_codigo():
+    codigo = entrada_texto.get("1.0", tk.END)
+    lineas = codigo.split("\n")
+    identificadores_totales = []
+
+    for i, linea in enumerate(lineas):
+        identificadores_linea = analizar(linea)
+        identificadores_totales.extend(
+            (i + 1, identificador) for identificador in identificadores_linea
+        )
+    resultado_texto.delete("1.0", tk.END)
+
+    for numero_linea, identificador in identificadores_totales:
+        resultado_texto.insert(tk.END, f"Línea {numero_linea}\n{identificador}\n")
+
+    numero_reservadas = len([identificador for _, identificador in identificadores_totales if identificador.startswith("RESERVADO")])
+    resultado_texto.insert(tk.END, f"\nPalabras reservadas: {numero_reservadas}\n")
+    
+    numero_identificador = len([identificador for _, identificador in identificadores_totales if identificador.startswith("IDENTIFICADOR")])
+    resultado_texto.insert(tk.END, f"\nIdentificadores Totales: {numero_identificador}\n")
+
+    numero_delimitador = len([identificador for _, identificador in identificadores_totales if identificador.startswith("DELIMITADOR")])
+    resultado_texto.insert(tk.END, f"\nDelimitadores Totales: {numero_delimitador}\n")
+
+    numero_operadores = len([identificador for _, identificador in identificadores_totales if identificador.startswith("OPERADOR")])
+    resultado_texto.insert(tk.END, f"\nOperadores Totales: {numero_operadores}\n")
+
+    numero_numeros = len([identificador for _, identificador in identificadores_totales if identificador.startswith("NUMERO")])
+    resultado_texto.insert(tk.END, f"\nNumeros Totales: {numero_numeros}\n")
+
+    numero_corchetes = len([identificador for _, identificador in identificadores_totales if identificador.startswith("CORCHETES")])
+    resultado_texto.insert(tk.END, f"\nCorchetes Totales: {numero_corchetes}\n")
+
+def fullscreen():
+    # Toma el ancho y alto de la pantalla
+    ancho = ventana.winfo_screenwidth()
+    alto = ventana.winfo_screenheight()
+    # Establece la geometría de la ventana para que ocupe toda la pantalla
+    ventana.geometry(f"{ancho}x{alto}")
+
+ventana = tk.Tk()
+ventana.title("Análisis de Léxico")
+
+# Mezcla de colores: gris, morado y blanco
+color_fondo = "#800080"  # gris claro
+ventana.config(bg=color_fondo)
+
+entrada_texto = tk.Text(ventana, font=("Arial", 12), bg="white", height=10, width=40)
+entrada_texto.pack(pady=10, padx=10, expand=True, fill="both")
+
+resultado_texto = tk.Text(ventana, font=("Arial", 12), bg="white", height=10, width=40)
+resultado_texto.pack(pady=10, padx=10, expand=True, fill="both")
+
+boton_analizar = tk.Button(ventana, text="Analizar", font=("Arial", 12), bg="#121b29", fg="blue", command=analizar_codigo)
+boton_analizar.pack(pady=10)
+
+boton_borrar = tk.Button(ventana, text="Borrar", font=("Arial", 12), bg="#121b29", fg="red", command=lambda: entrada_texto.delete("1.0", tk.END))
+boton_borrar.pack(pady=10)
+
+# Botón para activar pantalla completa
+boton_fullscreen = tk.Button(ventana, text="Pantalla Completa", font=("Arial", 12), bg="#121b29", fg="white", command=fullscreen)
+boton_fullscreen.pack(pady=10)
+
+# Botón para salir de pantalla completa
+boton_salir_fullscreen = tk.Button(ventana, text="Salir de Pantalla Completa", font=("Arial", 12), bg="#121b29", fg="white", command=ventana.quit)
+boton_salir_fullscreen.pack(pady=10)
+
+# Establecer tamaño inicial de la ventana
+ventana.geometry("500x580")
+
+ventana.mainloop()
